@@ -1,12 +1,16 @@
 # Autonomous Mobile Robot with Edge Vision AI
 
+<p align="center">
+  <img src="images/IMG_6718.PNG" width="600">
+</p>
+
 A prototype autonomous robot built using **Raspberry Pi, Arduino, camera, and AI**.
 
 The robot uses a camera to understand its surroundings and make basic movement decisions such as **Forward, Left, Right, and Stop**. The Raspberry Pi handles the camera and AI communication, while the Arduino controls the motors and provides an additional obstacle-safety layer.
 
 ## Demo
 
-🎥 **Video:** [Add your video link here]
+🎥 **[Watch the Robot Demo](YOUR_GOOGLE_DRIVE_LINK)**
 
 ---
 
@@ -36,7 +40,7 @@ Arduino
 Stop the robot
 ```
 
-So even if the AI takes time to respond, the Arduino can independently stop the robot when an obstacle is too close.
+This allows the Arduino to stop the robot independently if an obstacle gets too close, even while the AI is processing the next image.
 
 ---
 
@@ -45,17 +49,17 @@ So even if the AI takes time to respond, the Arduino can independently stop the 
 * Integrated a Raspberry Pi camera for capturing the environment.
 * Connected the Raspberry Pi to a locally running Vision-Language Model (LLaVA).
 * Converted AI decisions into simple movement commands.
-* Built serial communication between Raspberry Pi and Arduino.
+* Built serial communication between the Raspberry Pi and Arduino.
 * Implemented motor control using an Arduino and motor driver.
-* Added a VL53L0X ToF sensor for basic obstacle detection.
+* Added a VL53L0X ToF sensor for obstacle detection.
 * Added a safety stop when an obstacle is detected within 30 cm.
-* Used Python `threading` and `queue` so AI processing does not completely block robot movement.
+* Used Python `threading` and `queue` so AI processing does not completely stop robot movement.
 
 ---
 
 ## Technology Used
 
-**Hardware**
+### Hardware
 
 * Raspberry Pi 4
 * Arduino Uno
@@ -65,11 +69,10 @@ So even if the AI takes time to respond, the Arduino can independently stop the 
 * H-Bridge Motor Driver
 * Battery + Buck Converter
 
-**Software**
+### Software
 
 * Python
 * C++ / Arduino
-* OpenCV / Camera
 * LLaVA
 * Ollama
 * Serial Communication
@@ -79,7 +82,7 @@ So even if the AI takes time to respond, the Arduino can independently stop the 
 
 ## Project Architecture
 
-The project has two main parts:
+The system has two main parts.
 
 ### Raspberry Pi
 
@@ -100,15 +103,15 @@ Handles:
 * Obstacle detection
 * Emergency stopping
 
-This keeps the **AI logic separate from the low-level motor and safety control**.
+This keeps the **AI processing separate from the low-level motor and safety control**.
 
 ---
 
 ## Key Challenge
 
-The biggest challenge was AI latency.
+One of the main challenges was **AI response time**.
 
-The Vision-Language Model can take a few seconds to process an image. Instead of stopping the robot completely while waiting, I used Python **multithreading**.
+The Vision-Language Model can take a few seconds to process an image. Instead of completely stopping the robot while waiting, I used Python **multithreading**.
 
 One thread handles the AI processing while another handles the robot commands.
 
@@ -118,13 +121,15 @@ This allows the robot to keep moving slowly while the next AI decision is being 
 
 ## Current Status
 
-**Phase 1 completed**
+### Phase 1 Completed
 
 * Camera → AI → Arduino → Motors working
 * AI-based movement commands working
 * Obstacle detection working
 * Safety stop implemented
 * Raspberry Pi and Arduino communication working
+
+---
 
 ## Future Improvements
 
@@ -139,4 +144,4 @@ This allows the robot to keep moving slowly while the next AI decision is being 
 
 ## Project Goal
 
-The goal of this project was to get hands-on experience building a complete **AI + robotics system**, from camera input and AI decision-making to embedded motor control and physical movement.
+The goal of this project was to build a complete **AI + robotics system**, starting from camera input and AI decision-making and ending with real physical movement and obstacle safety.
