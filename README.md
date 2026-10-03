@@ -1,269 +1,142 @@
 # Autonomous Mobile Robot with Edge Vision AI
 
-A Phase 1 proof-of-concept autonomous mobile robot built using a Raspberry Pi, Arduino, camera, ToF distance sensor, and a locally running Vision-Language Model.
+A prototype autonomous robot built using **Raspberry Pi, Arduino, camera, and AI**.
 
-The main goal of this project was to experiment with using AI for high-level navigation while keeping the actual motor control and basic obstacle safety on a microcontroller.
+The robot uses a camera to understand its surroundings and make basic movement decisions such as **Forward, Left, Right, and Stop**. The Raspberry Pi handles the camera and AI communication, while the Arduino controls the motors and provides an additional obstacle-safety layer.
 
 ## Demo
 
-**Demo video:** [Add your YouTube/video link here]
-
-The video shows the robot receiving visual input, sending the image to the AI system, receiving a navigation command, and controlling the motors through the Arduino.
-
----
-
-## Hardware
-
-* Raspberry Pi 4
-* 5MP CSI Camera
-* Arduino Uno
-* VL53L0X ToF distance sensor
-* DC motors
-* H-bridge motor driver
-* 2S2P lithium battery setup
-* 5V buck converter
+🎥 **Video:** [Add your video link here]
 
 ---
 
 ## How It Works
-
-The system is split between the Raspberry Pi and Arduino.
-
-The Raspberry Pi handles the camera and communicates with a locally running Vision-Language Model. The model looks at the camera image and returns a simple navigation command:
-
-```text
-FORWARD
-LEFT
-RIGHT
-STOP
-```
-
-The Raspberry Pi then converts these commands into simple serial commands and sends them to the Arduino.
-
-The Arduino controls the motors and continuously checks the VL53L0X distance sensor.
-
-The basic flow is:
 
 ```text
 Camera
    ↓
 Raspberry Pi
    ↓
-Vision-Language Model
+AI analyzes the image
    ↓
-FORWARD / LEFT / RIGHT / STOP
+Forward / Left / Right / Stop
    ↓
 Arduino
-   ↓
-Motor Driver
    ↓
 Motors
 ```
 
-At the same time:
+The Arduino also uses a **VL53L0X distance sensor** to detect nearby obstacles.
 
 ```text
-VL53L0X
-   ↓
+Obstacle < 30 cm
+       ↓
 Arduino
-   ↓
-Obstacle detected
-   ↓
-Stop motors
+       ↓
+Stop the robot
 ```
 
-This means the Arduino can stop the robot when an obstacle gets too close, even if the AI system is still processing an image.
+So even if the AI takes time to respond, the Arduino can independently stop the robot when an obstacle is too close.
 
 ---
 
-## Software
+## What I Built
+
+* Integrated a Raspberry Pi camera for capturing the environment.
+* Connected the Raspberry Pi to a locally running Vision-Language Model (LLaVA).
+* Converted AI decisions into simple movement commands.
+* Built serial communication between Raspberry Pi and Arduino.
+* Implemented motor control using an Arduino and motor driver.
+* Added a VL53L0X ToF sensor for basic obstacle detection.
+* Added a safety stop when an obstacle is detected within 30 cm.
+* Used Python `threading` and `queue` so AI processing does not completely block robot movement.
+
+---
+
+## Technology Used
+
+**Hardware**
+
+* Raspberry Pi 4
+* Arduino Uno
+* 5MP CSI Camera
+* VL53L0X ToF Sensor
+* DC Motors
+* H-Bridge Motor Driver
+* Battery + Buck Converter
+
+**Software**
+
+* Python
+* C++ / Arduino
+* OpenCV / Camera
+* LLaVA
+* Ollama
+* Serial Communication
+* Multithreading
+
+---
+
+## Project Architecture
+
+The project has two main parts:
 
 ### Raspberry Pi
 
-The Raspberry Pi runs a Python program that:
+Handles:
 
-* Captures images from the camera
-* Sends images to the AI server
-* Receives the navigation decision
-* Converts the decision into a simple motor command
-* Sends commands to the Arduino over serial
-
-The AI processing runs in a separate thread so that the robot does not have to completely stop while waiting for the next AI response.
-
-A Python queue is used to pass commands between the AI thread and the motor-control thread.
-
-Example:
-
-```text
-AI response
-    ↓
-Command Queue
-    ↓
-Driver Thread
-    ↓
-Arduino
-```
+* Camera input
+* AI communication
+* Navigation decisions
+* Command queue
+* Communication with Arduino
 
 ### Arduino
 
-The Arduino is responsible for the low-level control.
+Handles:
 
-It:
+* Motor control
+* Distance sensor
+* Obstacle detection
+* Emergency stopping
 
-* Receives commands from the Raspberry Pi
-* Controls the motor driver
-* Reads the VL53L0X sensor
-* Stops the motors when an obstacle is detected within the configured safety distance
-* Allows turning commands when the forward path is blocked
-
-The current safety distance is:
-
-```text
-300 mm / 30 cm
-```
+This keeps the **AI logic separate from the low-level motor and safety control**.
 
 ---
 
-## Handling AI Latency
+## Key Challenge
 
-One of the main problems I wanted to solve was AI inference latency.
+The biggest challenge was AI latency.
 
-A Vision-Language Model can take a few seconds to process an image. If the robot simply waited for every response, the movement would look very slow and inconsistent.
+The Vision-Language Model can take a few seconds to process an image. Instead of stopping the robot completely while waiting, I used Python **multithreading**.
 
-To handle this, the Raspberry Pi uses two threads:
+One thread handles the AI processing while another handles the robot commands.
 
-### Brain thread
-
-Captures an image and sends it to the AI system.
-
-```text
-Camera → AI → Navigation command
-```
-
-### Driver thread
-
-Continuously handles the latest available motor command and communicates with the Arduino.
-
-When there is no new AI command, the robot can use a slow creep command instead of completely stopping.
-
-This keeps the robot moving while the next AI decision is being processed.
-
----
-
-## Safety Handling
-
-The AI is not responsible for the final emergency stop.
-
-The Arduino continuously checks the VL53L0X sensor.
-
-If an object is detected within 30 cm:
-
-```text
-Obstacle detected
-       ↓
-Arduino stops motors
-       ↓
-Forward commands are ignored
-       ↓
-Turning commands can still be used
-```
-
-This provides a basic hardware-level safety layer independent of the AI response.
-
----
-
-## Power System
-
-The prototype uses a 7.4V battery setup for the motor/actuator side.
-
-A buck converter is used to provide the required lower voltage for the electronics.
-
-The basic power arrangement is:
-
-```text
-Battery
-   ├── Motor Driver → Motors
-   │
-   └── Buck Converter → 5V Electronics
-                         ├── Raspberry Pi
-                         ├── Arduino
-                         └── Sensors
-```
-
-The purpose of separating the motor and logic power paths is to reduce the effect of motor-related electrical noise on the electronics.
-
----
-
-## Repository Structure
-
-```text
-autonomous-mobile-robot/
-│
-├── raspberry_pi/
-│   └── robot.py
-│
-├── arduino/
-│   └── robot_controller.ino
-│
-├── images/
-│   └── robot.jpg
-│
-├── videos/
-│   └── demo.mp4
-│
-└── README.md
-```
+This allows the robot to keep moving slowly while the next AI decision is being processed.
 
 ---
 
 ## Current Status
 
-### Phase 1 — Completed
+**Phase 1 completed**
 
-* Raspberry Pi camera integration
-* Raspberry Pi → AI communication
-* AI-based navigation commands
-* Raspberry Pi → Arduino serial communication
-* Arduino motor control
-* VL53L0X obstacle detection
-* Basic emergency stop behavior
-* Python threading and command queue
-* End-to-end robot movement test
+* Camera → AI → Arduino → Motors working
+* AI-based movement commands working
+* Obstacle detection working
+* Safety stop implemented
+* Raspberry Pi and Arduino communication working
 
----
+## Future Improvements
 
-## Phase 2 — Planned
-
-The next version will focus on improving the perception and robotics stack.
-
-Planned work:
-
-* ROS2-based communication
-* More reliable command handling
-* Real-time object detection instead of VLM-based navigation
-* YOLO + TensorRT optimization
+* ROS2 integration
+* Faster real-time object detection
+* YOLO + TensorRT
 * Better obstacle avoidance
-* Improved motor control
-* Encoder-based movement feedback
-* More structured navigation logic
+* Motor encoders and movement feedback
+* Improved navigation
 
 ---
 
-## What I Learned
+## Project Goal
 
-This project gave me hands-on experience with:
-
-* Raspberry Pi development
-* Arduino and embedded motor control
-* Camera integration
-* Serial communication
-* Python multithreading
-* Producer/consumer queues
-* Vision-Language Models
-* Edge AI concepts
-* ToF distance sensing
-* Motor drivers
-* Power management
-* Hardware/software integration
-
-The project is still a prototype, but the main purpose was to build and test the complete pipeline from **camera input → AI decision → embedded control → physical movement**.
+The goal of this project was to get hands-on experience building a complete **AI + robotics system**, from camera input and AI decision-making to embedded motor control and physical movement.
