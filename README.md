@@ -1,7 +1,8 @@
 # Autonomous Mobile Robot with Edge Vision AI
 
 <p align="center">
-  <img src="images/IMG_6718.PNG" width="600">
+  <img src="images/IMG_6718.PNG" width="48%">
+  <img src="images/IMG_6719.PNG" width="48%">
 </p>
 
 A prototype autonomous robot built using **Raspberry Pi, Arduino, camera, and AI**.
